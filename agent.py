@@ -5,20 +5,20 @@ from game import SnakeGameAI, Point, Directions, BLOCK_SIZE
 from model import QNeuralNetwork, QTrainer
 import numpy as np
 
-MAX_MEMORY = 100_000
-BATCH_SIZE = 1_000
-LR = 0.001
+MAX_MEMORY = 500_000
+BATCH_SIZE = 3_000
+LR = 0.0001
 
 
 class Agent:
     def __init__(self, state_dict = None, n_games=0):
         self.n_games = n_games
         self.epsilon = 0
-        self.gamma = 0.9
+        self.gamma = 0.99
 
         self.memory = deque(maxlen=MAX_MEMORY)
 
-        self.model = QNeuralNetwork(11, 256, 3)
+        self.model = QNeuralNetwork(11, 512, 3)
         self.trainer = QTrainer(self.model, self.gamma, LR)
         if state_dict is not None:
             self.model.load_state_dict(state_dict)
@@ -87,7 +87,7 @@ class Agent:
     # Exploit is basing decisions on stored data
     # Explore forces the agent to try new things, so we won't stack in a local minimum
     def get_action(self, state):
-            self.epsilon = 80 - self.n_games
+            self.epsilon = max(10, 200 - self.n_games)
             final_move = [0, 0, 0]
 
             # Explore

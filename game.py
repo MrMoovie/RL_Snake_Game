@@ -36,6 +36,12 @@ class SnakeGameAI:
                       Point((self.head.x - 2 * BLOCK_SIZE), self.head.y)]
 
         self.score = 0
+
+        ###1
+        self.hunter_direction = Directions.Down
+        self.hunter = Point(0, 0)
+        ###
+
         self.food = None
         self._place_food()
         self.track_iteration = 0
@@ -47,6 +53,10 @@ class SnakeGameAI:
 
         if self.food in self.snake:
             self._place_food()
+        ###2
+        if self.food in self.hunter:
+            self._place_food()
+        ###
 
     ##part 2
     def play_step(self, action):
@@ -79,13 +89,17 @@ class SnakeGameAI:
         return reward, game_over, self.score
 
     def _is_collision(self, pt=None):
-        if pt == None:
+        if pt is None:
             pt = self.head
+            ##if pt is self.hunter:
+                ##return True
         if pt.x > (self.w - BLOCK_SIZE) or pt.x < 0 or pt.y > (self.h-BLOCK_SIZE) or pt.y < 0:
             return True
         if pt in self.snake[1:]:
             return True
         return False
+
+   ## def hunt(self):
 
     ###stage 3
     def _move(self, action):

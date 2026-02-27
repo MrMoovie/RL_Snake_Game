@@ -9,12 +9,13 @@ class QNeuralNetwork(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super().__init__()
         self.layer1 = nn.Linear(input_size, hidden_size)
-
-        self.layer2 = nn.Linear(hidden_size, output_size)
+        self.layer2 = nn.Linear(hidden_size, hidden_size)
+        self.layer3 = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
         output_1 = F.relu(self.layer1(x))
-        output = self.layer2(output_1)
+        output_2 = F.relu(self.layer2(output_1))
+        output = self.layer3(output_2)
         return output
 
 class QTrainer:
@@ -48,7 +49,6 @@ class QTrainer:
         #Each idx is a move from a batch of N random moves from the Memory bank on which we will train.
         for idx in range(len(game_over)):
             Q_new = reward[idx]
-
             if not game_over[idx]:
 
                 best_outcome = torch.max(self.model(next_state))

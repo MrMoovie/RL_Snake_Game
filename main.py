@@ -3,7 +3,7 @@ import torch
 from game import SnakeGameAI
 from agent import Agent
 
-AGENT_1_PATH = "state_dict/AGENT_1_params.pth"
+AGENT_1_PATH = "state_dict/VER_2.0.pth"
 
 checkpoint = {
     "state_dict" : None,
