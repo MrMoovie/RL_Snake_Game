@@ -15,7 +15,7 @@ class Directions(Enum):
 
 Point = namedtuple('Point', 'x,y')
 BLOCK_SIZE = 20
-SPEED = 100
+SPEED = 40
 
 class SnakeGameAI:
     def __init__(self, w=640, h=480):
@@ -54,8 +54,8 @@ class SnakeGameAI:
         if self.food in self.snake:
             self._place_food()
         ###2
-        if self.food in self.hunter:
-            self._place_food()
+        # if self.food == self.hunter:
+        #     self._place_food()
         ###
 
     ##part 2
@@ -66,22 +66,30 @@ class SnakeGameAI:
                 pygame.quit()
                 quit()
 
+        old_distance = abs(self.head.x-self.food.x) + abs(self.head.y-self.food.y)
+
         self._move(action) ###
         self.snake.insert(0, self.head)
+
+        new_distance = abs(self.head.x - self.food.x) + abs(self.head.y - self.food.y)
 
         reward = 0
         game_over = False
         if self._is_collision() or self.track_iteration > 100 * len(self.snake):
             game_over=True
-            reward=-10
+            reward = -10
             return reward, game_over, self.score
 
         if self.head == self.food:
             self.score += 1
             reward = 10
             self._place_food()
-        else:
+        else: # wandering penalty
             self.snake.pop()
+            if new_distance > old_distance:
+                reward = -0.1
+            else:
+                reward = 0.1
 
         self._update_ui()
         self.clock.tick(SPEED)

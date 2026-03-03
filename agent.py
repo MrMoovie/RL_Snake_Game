@@ -18,7 +18,7 @@ class Agent:
 
         self.memory = deque(maxlen=MAX_MEMORY)
 
-        self.model = QNeuralNetwork(11, 512, 3)
+        self.model = QNeuralNetwork(13, 512, 3)
         self.trainer = QTrainer(self.model, self.gamma, LR)
         if state_dict is not None:
             self.model.load_state_dict(state_dict)
@@ -30,6 +30,11 @@ class Agent:
         point_r = Point((head.x+BLOCK_SIZE), head.y)
         point_u = Point(head.x, (head.y-BLOCK_SIZE))
         point_d = Point(head.x, (head.y+BLOCK_SIZE))
+        #Diagonals
+        point_ul = Point(head.x-BLOCK_SIZE, head.y-BLOCK_SIZE)
+        point_ur = Point(head.x +BLOCK_SIZE, head.y-BLOCK_SIZE)
+        point_dr = Point(head.x+BLOCK_SIZE, head.y+BLOCK_SIZE)
+        point_dl = Point(head.x-BLOCK_SIZE, head.y+BLOCK_SIZE)
 
         #current direction
         dir_l = game.direction == Directions.Left
@@ -56,6 +61,18 @@ class Agent:
             (dir_u and game._is_collision(point_l)) or
             (dir_r and game._is_collision(point_u)) or
             (dir_l and game._is_collision(point_d)),
+
+            #Danger diagonal CCW
+            (dir_r and game._is_collision(point_ur)) or
+            (dir_l and game._is_collision(point_dl)) or
+            (dir_u and game._is_collision(point_ul)) or
+            (dir_d and game._is_collision(point_dr)),
+
+            #Danger diagonal CW
+            (dir_r and game._is_collision(point_dr)) or
+            (dir_l and game._is_collision(point_ul)) or
+            (dir_u and game._is_collision(point_ur)) or
+            (dir_d and game._is_collision(point_dl)),
 
             # Move direction
             dir_l, dir_r, dir_u, dir_d,
