@@ -15,7 +15,7 @@ class Directions(Enum):
 
 Point = namedtuple('Point', 'x,y')
 BLOCK_SIZE = 20
-SPEED = 40
+SPEED = 1000
 
 class SnakeGameAI:
     def __init__(self, w=640, h=480):
@@ -87,9 +87,11 @@ class SnakeGameAI:
         else: # wandering penalty
             self.snake.pop()
             if new_distance > old_distance:
-                reward = -0.1
+                reward = -0.2
             else:
                 reward = 0.1
+
+        reward-=0.05
 
         self._update_ui()
         self.clock.tick(SPEED)
@@ -135,6 +137,35 @@ class SnakeGameAI:
             y+=BLOCK_SIZE
 
         self.head = Point(x,y)
+
+        #-----------------------------------------------------
+    def get_image_state(self):
+        grid_w = self.w // BLOCK_SIZE
+        grid_h = self.h // BLOCK_SIZE
+
+        state = np.zeros((3, grid_h, grid_w), dtype=np.float32)
+
+        food_x = int(self.food.x // BLOCK_SIZE)
+        food_y = int(self.food.y // BLOCK_SIZE)
+        if 0 <= food_x < grid_w and 0 <= food_y < grid_h:
+            state[0, food_y, food_x] = 1.0
+
+        head_x = int(self.head.x // BLOCK_SIZE)
+        head_y = int(self.head.y // BLOCK_SIZE)
+        if 0 <= head_x < grid_w and 0 <= head_y < grid_h:
+            state[1, head_y, head_x] = 1.0
+
+        for pt in self.snake[1:]:
+            pt_x = int(pt.x // BLOCK_SIZE)
+            pt_y = int(pt.y // BLOCK_SIZE)
+            if 0 <= pt_x < grid_w and 0 <= pt_y < grid_h:
+                state[2, pt_y, pt_x] = 1.0
+
+        return state
+
+    #-----------------------------------------------------
+
+
 
     def _update_ui(self):
         self.display.fill((0,0,0))

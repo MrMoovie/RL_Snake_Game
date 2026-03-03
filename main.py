@@ -1,9 +1,9 @@
 import torch
 
 from game import SnakeGameAI
-from agent import Agent
+from agent import CNN_Agent
 
-AGENT_1_PATH = "state_dict/VER_2.0.pth"
+AGENT_1_PATH = "state_dict/VER_3.0.pth"
 
 checkpoint = {
     "state_dict" : None,
@@ -25,7 +25,7 @@ def train():
 
     record = checkpoint.get("record")
     game = SnakeGameAI()
-    agent = Agent(checkpoint.get("state_dict"), checkpoint.get("n_games"))
+    agent = CNN_Agent(checkpoint.get("state_dict"), checkpoint.get("n_games"))
 
     while True:
         state_old = agent.get_state(game)

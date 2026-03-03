@@ -1,13 +1,82 @@
 import random
 from collections import deque
 import torch
-from game import SnakeGameAI, Point, Directions, BLOCK_SIZE
-from model import QNeuralNetwork, QTrainer
+from game import Point, Directions, BLOCK_SIZE
+from model import QNeuralNetwork, QTrainer, CNN_QNeural_Network, CNN_QTrainer
 import numpy as np
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"[*] AI initialized on device: {device}")
+
 MAX_MEMORY = 500_000
-BATCH_SIZE = 3_000
-LR = 0.0001
+BATCH_SIZE = 1_000
+LR = 0.0002
+
+class CNN_Agent:
+    def __init__(self, state_dict = None, n_games=0):
+        self.n_games = n_games
+        self.epsilon = 0
+        self.gamma = 0.99
+
+        self.memory = deque(maxlen=MAX_MEMORY)
+
+        self.model = CNN_QNeural_Network(output_size=3)
+
+        # --- TELEPORT THE MODEL TO THE GPU ---
+        self.model.to(device)
+        # -------------------------------------
+
+        self.trainer = CNN_QTrainer(self.model, self.gamma, LR)
+
+
+
+        if state_dict is not None:
+            self.model.load_state_dict(state_dict)
+
+    def get_state(self, game):
+        return game.get_image_state()
+
+    def remember(self, state, action, reward, next_state, done):
+        self.memory.append((state, action, reward, next_state, done))
+
+    def train_short_memory(self, state, action, reward, next_state, done):
+        self.trainer.train_step(state, action, reward, next_state, done)
+
+    def train_long_memory(self):
+        if len(self.memory) > BATCH_SIZE:
+            mini_sample = random.sample(self.memory, BATCH_SIZE)
+        else:
+            mini_sample = self.memory
+
+        states, actions, rewards, next_states, dones = zip(*mini_sample)
+        self.trainer.train_step(states, actions, rewards, next_states, dones)
+
+    # Exploit is basing decisions on stored data
+    # Explore forces the agent to try new things, so we won't stack in a local minimum
+    def get_action(self, state):
+            self.epsilon = max(10, 500 - self.n_games)
+            final_move = [0, 0, 0]
+
+            # Explore
+            if random.randint(0, 200) < self.epsilon:
+                move = random.randint(0, 2)
+                final_move[move] = 1
+
+            # Exploit
+            else:
+                state_opt = torch.tensor(state, dtype=torch.float)
+                state_opt = torch.unsqueeze(state_opt, 0)
+
+                # --- TELEPORT THE DATA TO THE GPU FOR THE PREDICTION ---
+                state_opt = state_opt.to(device)
+                # -------------------------------------------------------
+
+                pred = self.model(state_opt)
+
+                move = torch.argmax(pred).item()
+                final_move[move] = 1
+
+            return final_move
 
 
 class Agent:
